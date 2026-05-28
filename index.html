@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STONKS-9800 終極大亨版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'DotGothic16', sans-serif; background-color: #030303; color: #33ff33; overflow-x: hidden; user-select: none; }
+        .crt::before { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); z-index: 50; background-size: 100% 2px, 3px 100%; pointer-events: none; }
+        .crt-flicker { animation: crt-flicker 0.15s infinite; }
+        @keyframes crt-flicker { 0% { opacity: 0.95; } 50% { opacity: 1; } 100% { opacity: 0.98; } }
+        .panel { border: 2px solid #33ff33; box-shadow: 0 0 8px #33ff3355, inset 0 0 8px #33ff3355; background-color: #000800; }
+        .btn-retro { background-color: #002200; border: 1px solid #33ff33; color: #33ff33; transition: all 0.1s; cursor: pointer; }
+        .btn-retro:hover:not(:disabled) { background-color: #33ff33; color: #000000; box-shadow: 0 0 10px #33ff33; }
+        .btn-retro:disabled { border-color: #004400; color: #004400; cursor: not-allowed; background-color: transparent; }
+        .btn-diff { background-color: #000; border: 1px solid #005500; color: #00aa00; transition: all 0.2s; }
+        .btn-diff:hover, .btn-diff.selected { border-color: #33ff33; color: #33ff33; box-shadow: inset 0 0 10px #33ff3355; background-color: #002200; }
+        .btn-money { background-color: #000; border: 1px solid #005555; color: #00aaaa; transition: all 0.2s; }
+        .btn-money:hover, .btn-money.selected { border-color: #00ffff; color: #00ffff; box-shadow: inset 0 0 10px #00ffff55; background-color: #002222; }
+        .tab-btn { border-bottom: none; opacity: 0.5; }
+        .tab-btn.active { opacity: 1; background-color: #003300; border-bottom: 2px solid #003300; margin-bottom: -2px; z-index: 10; position: relative;}
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .text-cyan { color: #00ffff; } .text-magenta { color: #ff00ff; } .text-yellow { color: #ffff00; } .text-red-retro { color: #ff4444; } .bg-red-retro { background-color: #aa0000; color: white; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #001100; } ::-webkit-scrollbar-thumb { background: #33ff33; }
+    </style>
+</head>
+<body class="crt crt-flicker min-h-screen p-2 md:p-4 flex flex-col items-center text-sm md:text-base">
+
+    <div id="start-screen" class="fixed inset-0 z-40 bg-black flex flex-col items-center justify-center p-4 overflow-y-auto">
+        <div class="w-full max-w-5xl space-y-6 my-auto">
+            <div class="text-center space-y-2 mb-8">
+                <h1 class="text-5xl md:text-7xl font-bold text-cyan drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] tracking-widest">STONKS-9800</h1>
+                <p class="text-xl text-magenta animate-pulse">ULTIMATE FINANCIAL & TAX ENGINE</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="panel p-6">
+                    <h2 class="text-2xl text-cyan border-b border-cyan-700 pb-2 mb-4">1. 創建大亨檔案</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1">玩家名稱 (Player Name):</label>
+                            <input type="text" id="start-player-name" class="bg-black border border-cyan-500 w-full p-2 text-cyan outline-none font-bold" placeholder="輸入尊姓大名" value="大亨">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1">初始資金 (Starting Capital):</label>
+                            <input type="number" id="start-money" class="bg-black border border-green-500 w-full p-2 text-green-400 outline-none font-bold" min="0" step="10000" value="2000000">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-400 block mb-1">居住模式 (Mode):</label>
+                                <select id="start-residence-mode" class="bg-black border border-magenta text-magenta p-2 w-full outline-none cursor-pointer" onchange="app.toggleResidenceFields()">
+                                    <option value="rent">租賃房屋 (每月扣租)</option>
+                                    <option value="own">自有資產 (需繳稅金)</option>
+                                </select>
+                            </div>
+                            <div id="start-residence-rent-container">
+                                <label class="text-xs text-gray-400 block mb-1">選擇租賃處:</label>
+                                <select id="start-residence-rent" class="bg-black border border-yellow-500 text-yellow-500 p-2 w-full outline-none cursor-pointer"></select>
+                            </div>
+                            <div id="start-residence-own-container" class="hidden">
+                                <label class="text-xs text-gray-400 block mb-1">選擇擁有處:</label>
+                                <select id="start-residence-own" class="bg-black border border-cyan-500 text-cyan-500 p-2 w-full outline-none cursor-pointer"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-gray-400 text-xs">自訂您的開局優勢。資金與住所將影響前期容錯率與生活開銷。</div>
+                </div>
+                <div class="panel p-6">
+                    <h2 class="text-2xl text-yellow border-b border-green-700 pb-2 mb-4">2. 選擇市場環境 (難度)</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <button class="btn-diff py-3 text-lg font-bold" onclick="app.selectDifficulty('easy')" id="btn-diff-easy">🟢 寬鬆 (Easy)</button>
+                        <button class="btn-diff py-3 text-lg font-bold selected" onclick="app.selectDifficulty('normal')" id="btn-diff-normal">🟡 常規 (Normal)</button>
+                        <button class="btn-diff py-3 text-lg font-bold" onclick="app.selectDifficulty('hard')" id="btn-diff-hard">🟠 嚴苛 (Hard)</button>
+                        <button class="btn-diff py-3 text-lg font-bold" onclick="app.selectDifficulty('hell')" id="btn-diff-hell">🔴 地獄 (Hell)</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm border-t border-green-800 pt-4" id="diff-desc"></div>
+                </div>
+            </div>
+            <div class="text-center mt-8">
+                <button class="btn-retro px-12 py-4 text-2xl font-bold shadow-[0_0_20px_#0f0]" onclick="app.startGame()">啟動系統 (START SYSTEM)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-ui" class="hidden w-full max-w-7xl space-y-2">
+        <header class="flex justify-between items-end border-b-2 border-green-500 pb-2 mb-2">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold text-cyan drop-shadow-[0_0_5px_rgba(0,255,255,0.8)]">STONKS-9800</h1>
+                <p class="text-magenta text-xs md:text-sm">玩家: <span id="ui-player-name" class="text-white font-bold"></span> | 模式: <span id="ui-diff-label" class="text-yellow"></span> | 稅制: <span id="ui-tax-rate" class="text-yellow">累進稅率</span> | 手續費: <span id="ui-fee-rate"></span></p>
+            </div>
+            <div class="text-right">
+                <div class="text-2xl text-yellow font-bold"><span id="ui-date">1988/01/01</span> <span id="ui-weekday">(五)</span></div>
+                <div class="text-xs text-gray-400">狀態: <span id="ui-market-state" class="text-cyan font-bold">盤整</span> | 基準利率: <span id="ui-interest-rate">2.5%</span> | 恐慌: <span id="ui-vix" class="text-magenta font-bold">15.0</span> | 通膨: <span id="ui-inflation" class="text-red-400">2.0%</span></div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-2 mb-4">
+            <div class="panel p-2 md:col-span-1 relative group">
+                <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+                    <span>可用現金</span><span title="放空凍結保證金">凍結: <span class="text-magenta" id="ui-locked-margin">$ 0</span></span>
+                </div>
+                <div class="text-lg md:text-xl font-bold text-cyan" id="ui-money">$ 0</div>
+                <div class="absolute top-0 right-0 p-1 text-[10px] text-red-500 hidden group-hover:block bg-black border border-red-500 z-10">查稅風險: <span id="ui-audit-risk">0</span>%</div>
+            </div>
+            <div class="panel p-2 md:col-span-1">
+                <div class="text-xs text-gray-400">淨資產估值 (Net Worth)</div>
+                <div class="text-lg md:text-xl font-bold text-yellow" id="ui-networth">$ 0</div>
+            </div>
+            <div class="panel p-2 text-xs md:col-span-2 flex flex-col justify-center">
+                <div class="flex justify-between"><span class="text-gray-400">總存款 / 借貸餘額:</span> <span><span class="text-green-400" id="ui-deposit">$ 0</span> / <span class="text-red-retro" id="ui-loan">$ 0</span></span></div>
+                <div class="flex justify-between border-t border-green-800 mt-1 pt-1">
+                    <span class="text-gray-400">本年度應稅所得:</span> 
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-cyan hidden" id="ui-tax-discount-hint">已獲減免 0%</span>
+                        <span class="text-yellow" id="ui-gains">$ 0</span>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-1">
+                    <span class="text-gray-400">本年度應稅房產與動產:</span> 
+                    <span class="text-red-400" id="ui-property-tax">$ 0</span>
+                </div>
+            </div>
+            <div class="panel p-2 text-[10px] md:text-xs md:col-span-2 flex flex-col justify-center">
+                <div class="grid grid-cols-2 gap-x-3 gap-y-1">
+                    <div class="flex flex-col"><div class="flex justify-between"><span>健康</span><span id="ui-health-val">100</span></div><div class="w-full h-1.5 bg-black border border-green-800"><div id="ui-health-bar" class="h-full bg-blue-500" style="width: 100%;"></div></div></div>
+                    <div class="flex flex-col"><div class="flex justify-between"><span>飽食</span><span id="ui-satiety-val">80</span></div><div class="w-full h-1.5 bg-black border border-green-800"><div id="ui-satiety-bar" class="h-full bg-orange-500" style="width: 80%;"></div></div></div>
+                    <div class="flex flex-col"><div class="flex justify-between"><span>幸福</span><span id="ui-happiness-val">50</span></div><div class="w-full h-1.5 bg-black border border-green-800"><div id="ui-happiness-bar" class="h-full bg-pink-500" style="width: 50%;"></div></div></div>
+                    <div class="flex flex-col"><div class="flex justify-between"><span>壓力</span><span id="ui-stress-val">0</span></div><div class="w-full h-1.5 bg-black border border-green-800"><div id="ui-stress-bar" class="h-full bg-green-500 transition-all duration-300" style="width: 0%;"></div></div></div>
+                </div>
+                <div class="mt-1 text-center text-gray-400">總舒適度: <span id="ui-comfort" class="text-cyan font-bold">0</span></div>
+            </div>
+        </div>
+
+        <div class="flex space-x-1 border-b-2 border-green-500 px-2 mt-2 overflow-x-auto" id="tabs">
+            <button class="btn-retro tab-btn px-4 py-2 active whitespace-nowrap" onclick="app.switchTab('market', this)">證券交易</button>
+            <button class="btn-retro tab-btn px-4 py-2 whitespace-nowrap text-yellow" onclick="app.switchTab('portfolio', this)">💼 我的庫存</button>
+            <button class="btn-retro tab-btn px-4 py-2 whitespace-nowrap" onclick="app.switchTab('chart', this)">📈 走勢曲線</button>
+            <button id="nav-ceo-tab" class="btn-retro tab-btn px-4 py-2 whitespace-nowrap hidden border-red-500 text-red-400" onclick="app.switchTab('ceo', this)">🏢 公司經營</button>
+            <button class="btn-retro tab-btn px-4 py-2 whitespace-nowrap" onclick="app.switchTab('bank', this)">🏦 金融與特權</button>
+            <button class="btn-retro tab-btn px-4 py-2 whitespace-nowrap" onclick="app.switchTab('calendar', this)">日曆與排程</button>
+            <button class="btn-retro tab-btn px-4 py-2 text-yellow whitespace-nowrap" onclick="app.switchTab('leisure', this)">行動與生存</button>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-4 mt-2">
+            <div class="w-full lg:w-3/4 panel p-4 min-h-[500px]">
+                
+                <div id="tab-market" class="tab-content active">
+                    <div class="flex space-x-1 mb-4 border-b border-gray-800">
+                        <button id="btn-market-spot" class="px-4 py-1 text-sm border-b-2 border-green-500 text-green-500 bg-green-900 bg-opacity-20" onclick="app.switchMarketSubTab('spot')">現股交易 (SPOT)</button>
+                        <button id="btn-market-margin" class="px-4 py-1 text-sm border-b-2 border-transparent text-gray-500 hover:text-magenta" onclick="app.switchMarketSubTab('margin')">信用交易 (MARGIN)</button>
+                    </div>
+
+                    <div id="market-spot-view">
+                        <div class="flex justify-between items-end mb-4 border-b border-green-700 pb-2">
+                            <div><h2 class="text-xl text-yellow font-bold">台灣加權指數 (TAIEX Proxy)</h2><div class="text-3xl" id="ui-index-value">21,500.00 <span class="text-sm text-green-500">▲ 0.00%</span></div></div>
+                            <div id="market-status-badge" class="bg-red-retro px-3 py-1 rounded text-sm font-bold">休市中</div>
+                        </div>
+                        
+                        <h3 class="text-lg text-cyan border-b border-cyan-800 pb-1 mb-2 mt-4">🇹🇼 台灣證券市場 (Domestic)</h3>
+                        <div class="overflow-x-auto mb-6">
+                            <table class="w-full text-left text-xs md:text-sm">
+                                <thead><tr class="border-b border-green-800 text-gray-400"><th class="pb-2">板塊/企業</th><th class="pb-2 text-right">現價 ($)</th><th class="pb-2 text-right">漲跌</th><th class="pb-2 text-right">現股均價</th><th class="pb-2 text-right">持有股數</th><th class="pb-2 text-right">未實現損益</th><th class="pb-2 text-center w-24">現股操作</th></tr></thead>
+                                <tbody id="stock-list-tw"></tbody>
+                            </table>
+                        </div>
+                        <h3 class="text-lg text-yellow border-b border-yellow-800 pb-1 mb-2 mt-4">🌎 海外證券市場 (Global)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs md:text-sm">
+                                <thead><tr class="border-b border-green-800 text-gray-400"><th class="pb-2">板塊/企業</th><th class="pb-2 text-right">現價 ($)</th><th class="pb-2 text-right">漲跌</th><th class="pb-2 text-right">現股均價</th><th class="pb-2 text-right">持有股數</th><th class="pb-2 text-right">未實現損益</th><th class="pb-2 text-center w-24">現股操作</th></tr></thead>
+                                <tbody id="stock-list-global"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="market-margin-view" class="hidden">
+                        <div class="flex justify-between items-end mb-4 border-b border-magenta pb-2">
+                            <div><h2 class="text-xl text-magenta font-bold">證券信用交易中心 (放空專區)</h2><p class="text-xs text-gray-400 mt-1">需支付 150% 保證金，每日收取借券費。維持率低於 <span class="text-red-500 font-bold">130%</span> 將強制斷頭平倉！</p></div>
+                        </div>
+                        <h3 class="text-lg text-cyan border-b border-cyan-800 pb-1 mb-2 mt-4">🇹🇼 台灣市場融券 (Domestic)</h3>
+                        <div class="overflow-x-auto mb-6">
+                            <table class="w-full text-left text-xs md:text-sm">
+                                <thead><tr class="border-b border-magenta text-gray-400"><th class="pb-2">板塊/企業</th><th class="pb-2 text-right">現價 ($)</th><th class="pb-2 text-right">空單持有</th><th class="pb-2 text-right">放空均價</th><th class="pb-2 text-right">凍結保證金</th><th class="pb-2 text-right">維持率</th><th class="pb-2 text-right">未實現損益</th><th class="pb-2 text-center w-24">信用操作</th></tr></thead>
+                                <tbody id="short-list-tw"></tbody>
+                            </table>
+                        </div>
+                        <h3 class="text-lg text-yellow border-b border-yellow-800 pb-1 mb-2 mt-4">🌎 海外市場融券 (Global)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs md:text-sm">
+                                <thead><tr class="border-b border-magenta text-gray-400"><th class="pb-2">板塊/企業</th><th class="pb-2 text-right">現價 ($)</th><th class="pb-2 text-right">空單持有</th><th class="pb-2 text-right">放空均價</th><th class="pb-2 text-right">凍結保證金</th><th class="pb-2 text-right">維持率</th><th class="pb-2 text-right">未實現損益</th><th class="pb-2 text-center w-24">信用操作</th></tr></thead>
+                                <tbody id="short-list-global"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-portfolio" class="tab-content">
+                    <div class="flex justify-between items-end mb-4 border-b border-yellow-700 pb-2">
+                        <div><h2 class="text-xl text-yellow font-bold">💼 現股庫存總覽 (Portfolio)</h2><p class="text-xs text-gray-400 mt-1">這裡僅列出您目前持有現股的企業，方便快速管理部位。</p></div>
+                    </div>
+                    <h3 class="text-lg text-cyan border-b border-cyan-800 pb-1 mb-2 mt-4">🇹🇼 台灣庫存 (Domestic)</h3>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-left text-xs md:text-sm">
+                            <thead><tr class="border-b border-green-800 text-gray-400"><th class="pb-2">板塊/企業</th><th class="pb-2 text-right">現價 ($)</th><th class="pb-2 text-right">漲跌</th><th class="pb-2 text-right">現股均價</th><th class="pb-2 text-right">持有股數</th><th class="pb-2 text-right">未實現損益</th><th class="pb-2 text-center w-24">現股操作</th></tr></thead>
+                            <tbody id="portfolio-list-tw"></tbody>
+                        </table>
+                    </div>
+                    <h3 class="text-lg text-yellow border-b border-yellow-800 pb-1 mb-2 mt-4">🌎 海外庫存 (Global)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs md:text-sm">
+                            <thead><tr class="border-b border-green-800 text-gray-400"><th class="pb-2">板塊/企業</th><th class="pb-2 text-right">現價 ($)</th><th class="pb-2 text-right">漲跌</th><th class="pb-2 text-right">現股均價</th><th class="pb-2 text-right">持有股數</th><th class="pb-2 text-right">未實現損益</th><th class="pb-2 text-center w-24">現股操作</th></tr></thead>
+                            <tbody id="portfolio-list-global"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="tab-chart" class="tab-content">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-green-700 pb-2 mb-2 gap-2">
+                        <h2 class="text-xl text-cyan font-bold">歷史價格走勢圖</h2>
+                        <div class="flex gap-2 text-sm w-full md:w-auto">
+                            <select id="chart-target-select" class="bg-black border border-green-500 text-green-500 p-1 outline-none flex-1 md:flex-none" onchange="app.setChartTarget(this.value)"></select>
+                            <div class="flex gap-1 shrink-0">
+                                <button class="btn-retro px-2 py-1 text-xs" onclick="app.setChartPeriod(7)">7日</button>
+                                <button class="btn-retro px-2 py-1 text-xs" onclick="app.setChartPeriod(30)">30日</button>
+                                <button class="btn-retro px-2 py-1 text-xs" onclick="app.setChartPeriod(60)">60日</button>
+                                <button class="btn-retro px-2 py-1 text-xs" onclick="app.setChartPeriod(365)">1年</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="custom-chart-selectors" class="hidden mb-4 p-2 bg-green-900 bg-opacity-20 border border-green-800 flex flex-wrap gap-2 max-h-32 overflow-y-auto"></div>
+                    <div class="w-full bg-black border border-green-800 p-2 relative">
+                        <div class="absolute top-4 left-4 text-xs text-gray-400 z-10 bg-black bg-opacity-80 p-1" id="chart-info"></div>
+                        <canvas id="price-chart" width="800" height="350" class="w-full h-auto border-b border-l border-green-900"></canvas>
+                    </div>
+                </div>
+
+                <div id="tab-ceo" class="tab-content">
+                    <div class="flex justify-between items-start border-b-2 border-red-800 pb-3 mb-4">
+                        <div>
+                            <h2 class="text-2xl text-red-500 font-bold flex items-center gap-2">
+                                🏢 企業最高決策中心 <span id="ceo-company-name" class="text-white bg-red-900 px-2 py-0.5 rounded text-lg">載入中...</span>
+                            </h2>
+                            <div class="flex gap-4 mt-2 text-xs">
+                                <div class="text-gray-400">總發行股數: <span id="ceo-total-shares" class="text-yellow">0</span> 股</div>
+                                <div class="text-gray-400">企業帳上現金: <span id="ceo-company-cash" class="text-green-400">$ 0</span></div>
+                            </div>
+                        </div>
+                        <div id="ceo-company-selector-container" class="hidden flex items-center gap-3">
+                            <div class="flex items-center gap-1 bg-red-900 bg-opacity-20 border border-red-900 px-2 py-1.5">
+                                <input type="checkbox" id="ceo-filter-only" class="w-3 h-3 accent-red-500 cursor-pointer" onchange="CEO_MODULE.toggleCeoFilter(this.checked)">
+                                <label for="ceo-filter-only" class="text-[10px] text-red-400 font-bold cursor-pointer whitespace-nowrap">只顯示親自經營 (CEO)</label>
+                            </div>
+                            <select id="ceo-company-select" class="bg-black border border-red-500 text-red-400 p-2 outline-none font-bold hover:bg-red-900 transition cursor-pointer" onchange="CEO_MODULE.switchCompany(this.value)"></select>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 mb-6 border-b border-gray-800 pb-2 overflow-x-auto">
+    <button id="btn-ceo-tab-main" class="px-4 py-2 text-sm font-bold border-b-2 transition-all border-red-500 text-red-400 bg-red-900 bg-opacity-40" onclick="CEO_MODULE.switchTab('main')">📊 經營概況</button>
+    <button id="btn-ceo-tab-ops" class="px-4 py-2 text-sm font-bold border-b-2 transition-all border-gray-700 text-gray-500 hover:text-white" onclick="CEO_MODULE.switchTab('ops')">🏭 核心營運</button>
+    <button id="btn-ceo-tab-flow" class="px-4 py-2 text-sm font-bold border-b-2 transition-all border-gray-700 text-gray-500 hover:text-white" onclick="CEO_MODULE.switchTab('flow')">💸 現金流明細</button>
+    
+    <button id="btn-ceo-tab-invest" class="px-4 py-2 text-sm font-bold border-b-2 transition-all border-gray-700 text-gray-500 hover:text-white" onclick="CEO_MODULE.switchTab('invest')">📈 企業投資</button>
+    
+    <button id="btn-ceo-tab-hr" class="px-4 py-2 text-sm font-bold border-b-2 transition-all border-gray-700 text-gray-500 hover:text-white" onclick="CEO_MODULE.switchTab('hr')">👨‍💼 人資管理</button>
+    <button id="btn-ceo-tab-cap" class="px-4 py-2 text-sm font-bold border-b-2 transition-all border-gray-700 text-gray-500 hover:text-white" onclick="CEO_MODULE.switchTab('cap')">💰 資本操作</button>
+</div>
+
+                    <div id="ceo-content-area" class="flex-1 overflow-y-auto text-sm text-gray-300">
+                        <div class="flex items-center justify-center h-[300px] text-gray-500 animate-pulse">載入公司機密數據中...</div>
+                    </div>
+                </div> 
+
+                <div id="tab-bank" class="tab-content">
+                    <div class="flex space-x-1 mb-4 border-b border-gray-800">
+                        <button id="btn-finance-regular" class="px-4 py-1 text-sm border-b-2 border-green-500 text-green-500 bg-green-900 bg-opacity-20" onclick="app.switchFinanceSubTab('regular')">正規銀行 (BANKING)</button>
+                        <button id="btn-finance-dark" class="px-4 py-1 text-sm border-b-2 border-transparent text-gray-500 hover:text-red-500" onclick="app.switchFinanceSubTab('dark')">地下勢力 (UNDERGROUND)</button>
+                        <button id="btn-finance-assets" class="px-4 py-1 text-sm border-b-2 border-transparent text-gray-500 hover:text-yellow" onclick="app.switchFinanceSubTab('assets')">資產與購物 (ASSETS)</button>
+                    </div>
+
+                    <div id="finance-regular-view">
+                        <div class="flex flex-col lg:flex-row gap-4">
+                            <div class="w-full lg:w-1/2">
+                                <h2 class="text-lg text-cyan border-b border-green-700 pb-1 mb-2">🏛️ 銀行機構清單</h2>
+                                <div class="text-xs text-gray-400 mb-3">無擔保信貸額度估算: <span id="ui-credit-limit" class="text-yellow font-bold">$ 0</span></div>
+                                <div id="bank-list" class="space-y-4"></div>
+                            </div>
+                            <div class="w-full lg:w-1/2">
+                                <h2 class="text-lg text-red-retro border-b border-red-800 pb-1 mb-2">📜 我的債務契約 (Active Loans)</h2>
+                                <div class="text-xs text-gray-400 mb-3">到期時系統將自動扣除現金還本。</div>
+                                <div id="active-loans-list" class="space-y-2 h-[450px] overflow-y-auto pr-1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="finance-dark-view" class="hidden">
+                        <h2 class="text-xl text-red-500 border-b border-red-700 pb-2 mb-4 font-bold">特權操作與地下黑市 (推進時間)</h2>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h3 class="text-lg text-cyan mb-2">🤝 成立慈善基金 (抵稅)</h3>
+                                <div class="grid grid-cols-1 gap-3">
+                                    <button class="btn-retro p-3 text-left border-cyan hover:bg-cyan-900 hover:bg-opacity-30 transition flex flex-col" onclick="app.doCharity('small')">
+                                        <span class="text-base text-cyan" id="ui-cost-charity-small">銅級捐贈</span>
+                                        <span class="text-xs text-gray-400 mt-1">獲得 <span class="text-yellow">2% 年度稅金減免</span>，幸福 +2。</span>
+                                    </button>
+                                    <button class="btn-retro p-3 text-left border-cyan hover:bg-cyan-900 hover:bg-opacity-30 transition flex flex-col" onclick="app.doCharity('medium')">
+                                        <span class="text-base text-cyan" id="ui-cost-charity-medium">銀級捐贈</span>
+                                        <span class="text-xs text-gray-400 mt-1">獲得 <span class="text-yellow">12% 年度稅金減免</span>，幸福 +15。</span>
+                                    </button>
+                                    <button class="btn-retro p-3 text-left border-cyan hover:bg-cyan-900 hover:bg-opacity-30 transition flex flex-col" onclick="app.doCharity('large')">
+                                        <span class="text-base text-cyan" id="ui-cost-charity-large">金級捐贈</span>
+                                        <span class="text-xs text-gray-400 mt-1">獲得 <span class="text-yellow">50% 年度稅金減免</span>，幸福 +60。</span>
+                                    </button>
+                                </div>
+                                <div class="mt-4 p-2 bg-black border border-cyan-800 text-sm text-center">
+                                    本年度累積稅金減免：<span id="ui-tax-discount" class="text-yellow font-bold">0%</span>
+                                </div>
+                            </div>
+                            <div class="bg-black border border-red-800 p-4 relative">
+                                <div class="font-bold text-red-400 mb-2 border-b border-red-900 pb-1">🕵️ 地下黑市 (購買市場內線)</div>
+                                <div class="text-xs text-gray-400 mb-4">花錢向線人購買明日的市場情報。注意：黑市充斥著假消息，且會增加被國稅局與金管會查緝的風險。</div>
+                                <div class="grid grid-cols-1 gap-2">
+                                    <button class="btn-retro py-2 border-gray-600 text-gray-400 hover:border-white hover:text-white transition" onclick="app.buyInsiderIntel('low')">
+                                        購買馬路消息 (準確率 15%) <br><span id="ui-cost-intel-low" class="text-[10px] text-yellow"></span>
+                                    </button>
+                                    <button class="btn-retro py-2 border-gray-600 text-gray-400 hover:border-white hover:text-white transition" onclick="app.buyInsiderIntel('mid')">
+                                        購買高層密報 (準確率 35%) <br><span id="ui-cost-intel-mid" class="text-[10px] text-yellow"></span>
+                                    </button>
+                                    <button class="btn-retro py-2 border-red-900 text-red-500 hover:border-red-500 hover:text-red-400 transition shadow-[0_0_10px_rgba(255,0,0,0.2)]" onclick="app.buyInsiderIntel('high')">
+                                        購買絕對內線 (準確率 65%) <br><span id="ui-cost-intel-high" class="text-[10px] text-yellow"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="finance-assets-view" class="hidden space-y-4">
+                        <div class="bg-black border border-red-800 p-4 relative mb-2">
+                            <h2 class="text-lg text-red-400 border-b border-red-900 pb-1 mb-3 font-bold">🚀 創業與企業總部</h2>
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div class="text-xs text-gray-400">擁有足夠的資本，您可以親手打造屬於自己的企業帝國，並申請掛牌上市。</div>
+                                <button class="btn-retro px-4 py-2 border-red-500 text-red-400 hover:bg-red-900 hover:text-white transition whitespace-nowrap" onclick="CEO_MODULE.openFoundModal()">自行成立公司</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="flex flex-col">
+                                <h2 class="text-lg text-yellow border-b border-yellow-800 pb-1 mb-3 font-bold">🏢 房地產市場 (Real Estate)</h2>
+                                <div id="real-estate-list" class="space-y-3 h-[520px] overflow-y-auto pr-2 custom-scrollbar">
+                                    </div>
+                            </div>
+
+                            <div class="flex flex-col">
+                                <h2 class="text-lg text-magenta border-b border-magenta pb-1 mb-3 font-bold">💎 奢華與私用資產 (Luxuries)</h2>
+                                <div class="h-[520px] overflow-y-auto pr-2 space-y-6 custom-scrollbar">
+                                    
+                                    <div>
+                                        <div class="text-xs text-yellow font-bold tracking-wider mb-2 flex items-center gap-2 border-b border-gray-800 pb-1">
+                                            <span>🏎️ 頂級載具 (VEHICLES)</span>
+                                        </div>
+                                        <div id="vehicle-list" class="grid grid-cols-1 gap-3">
+                                            </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-xs text-cyan font-bold tracking-wider mb-2 flex items-center gap-2 border-b border-gray-800 pb-1">
+                                            <span>💎 收藏精品 (COLLECTIBLES)</span>
+                                        </div>
+                                        <div id="luxury-list" class="grid grid-cols-1 gap-3">
+                                            </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-calendar" class="tab-content">
+                    <h2 class="text-xl text-yellow border-b border-green-700 pb-2 mb-4">行事曆與排程事件</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div class="lg:col-span-2">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="text-cyan text-lg font-bold tracking-widest" id="calendar-header">1988年 1月</h3>
+                                <div class="text-xs text-gray-400 flex items-center gap-3">
+                                    <span><span class="inline-block w-3 h-3 bg-green-900 border border-cyan align-middle mr-1"></span>今日</span>
+                                    <span><span class="inline-block w-3 h-3 bg-red-900 align-middle mr-1"></span>休市</span>
+                                </div>
+                            </div>
+                            <div class="bg-black border border-green-800 p-2">
+                                <div class="grid grid-cols-7 gap-1 text-center text-xs text-gray-400 mb-1 border-b border-green-900 pb-1">
+                                    <div class="text-red-500">日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div class="text-red-500">六</div>
+                                </div>
+                                <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-magenta mb-2 border-b border-magenta pb-1">待處理款項 (Escrow)</h3>
+                            <div id="pending-funds" class="bg-black border border-green-800 p-2 h-[340px] overflow-y-auto space-y-2 text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-leisure" class="tab-content">
+                    <h2 class="text-xl text-yellow border-b border-green-700 pb-2 mb-4 font-bold">行動與生存管理</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <div class="mb-4 p-4 border border-cyan-800 bg-cyan-900 bg-opacity-20">
+                                <h3 class="text-lg text-cyan mb-2">🏠 目前居住地</h3>
+                                <div id="ui-residence-info" class="text-sm space-y-1"></div>
+                            </div>
+                            <div class="mb-4 p-4 border border-yellow-800 bg-yellow-900 bg-opacity-20">
+                                <h3 class="text-lg text-cyan mb-2">🍽️ 每日餐飲方案設定</h3>
+                                <select id="meal-plan" class="bg-black border border-green-500 text-green-500 p-2 w-full font-bold" onchange="app.setMealPlan(this.value)"></select>
+                                <p class="mt-2 text-xs">目前基礎生活開銷: <span id="ui-daily-cost" class="text-yellow font-bold">$ 0</span> / 天</p>
+                            </div>
+                            <div class="p-4 border border-blue-800 bg-blue-900 bg-opacity-20">
+                                <h3 class="text-lg text-blue-400 mb-2">💼 職業與兼職 (推進時間)</h3>
+                                <button class="btn-retro w-full p-3 text-left hover:bg-blue-900 transition flex flex-col" onclick="app.doWork()">
+                                    <span class="text-base text-blue-300">🏢 乖乖去上班 (<span class="text-green-400" id="ui-salary-work">+$ 15,000</span>)</span>
+                                    <span class="text-xs text-gray-400 mt-1">出賣一天的靈魂與時間。壓力 +10，飽食 -10。</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg text-magenta mb-2">🍸 夜生活與紓壓 (推進時間)</h3>
+                            <div class="grid grid-cols-1 gap-3">
+                                <button class="btn-retro p-3 text-left hover:bg-green-900 transition flex flex-col" onclick="app.doLeisure('izakaya')">
+                                    <span class="text-base">🍺 熱炒店喝酒 (<span class="text-red-400" id="ui-cost-izakaya">-$ 10,000</span>)</span>
+                                </button>
+                                <button class="btn-retro p-3 text-left hover:bg-green-900 transition flex flex-col" onclick="app.doLeisure('pachinko')">
+                                    <span class="text-base">🎰 地下遊藝場 (<span class="text-red-400" id="ui-cost-pachinko">-$ 30,000</span>)</span>
+                                </button>
+                                <button class="btn-retro p-3 text-left border-magenta hover:bg-magenta hover:bg-opacity-20 transition flex flex-col" onclick="app.doLeisure('club')">
+                                    <span class="text-base text-magenta">🍸 東區高級酒店 (<span class="text-red-400" id="ui-cost-club">-$ 300,000</span>)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="w-full lg:w-1/4 flex flex-col gap-3">
+                <button class="btn-retro w-full py-4 text-lg font-bold shadow-[0_0_10px_rgba(0,255,0,0.4)] hover:bg-green-900 transition bg-green-900 bg-opacity-30" onclick="app.doLeisure('sleep')">
+                    🛏️ 結束本日 (在家休息)
+                </button>
+                <div class="panel p-3 flex flex-col flex-1 h-[430px]">
+                    <h3 class="border-b border-green-700 pb-1 mb-2 text-cyan font-bold">系統與新聞日誌</h3>
+                    <div id="log-container" class="flex-1 overflow-y-auto space-y-1 text-[11px] pr-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-loan-apply" class="fixed inset-0 bg-black bg-opacity-95 hidden flex flex-col items-center justify-center z-50 p-4">
+        <div class="panel p-6 w-full max-w-md border-red-500">
+            <h3 class="text-2xl mb-4 border-b border-red-800 pb-2 text-red-400 font-bold">申辦貸款契約</h3>
+            <div class="space-y-2 text-sm text-gray-300 mb-4">
+                <p>銀行: <span id="la-bank-name" class="text-yellow"></span></p>
+                <p>專案: <span id="la-prod-name" class="text-cyan font-bold"></span></p>
+                <p>浮動利率: <span id="la-rate" class="text-red-400 font-bold"></span> (隨央行浮動) | 期限: <span id="la-term" class="text-white"></span> 天</p>
+                <p class="text-[10px] text-gray-500" id="la-desc"></p>
+            </div>
+            <div id="la-collateral-section" class="mb-4 hidden">
+                <label class="text-xs text-gray-400 block mb-1">選擇抵押擔保品:</label>
+                <select id="la-collateral-select" class="bg-black border border-green-500 text-green-500 p-2 w-full text-sm outline-none" onchange="app.updateLoanApplyUI()"></select>
+            </div>
+            <div class="mb-6">
+                <label class="text-xs text-gray-400 flex justify-between">
+                    <span>借款金額 (最高: <span id="la-max-amt" class="text-yellow">0</span>)</span>
+                </label>
+                <input type="number" id="la-amount" class="bg-black border border-green-500 w-full p-2 text-white outline-none mt-1 font-bold text-lg" placeholder="輸入借款金額" oninput="app.validateLoanApplyAmount()">
+                <div class="grid grid-cols-4 gap-1 mt-2">
+                    <button class="btn-retro py-1 text-xs" onclick="app.addModalAmt('la-amount', 10000)">+10000</button>
+                    <button class="btn-retro py-1 text-xs" onclick="app.addModalAmt('la-amount', 1000)">+1000</button>
+                    <button class="btn-retro py-1 text-xs" onclick="app.addModalAmt('la-amount', 100)">+100</button>
+                    <button class="btn-retro py-1 text-xs text-yellow border-yellow-800" onclick="app.setModalMaxAmt('la')">最大</button>
+                    <button class="btn-retro py-1 text-xs text-gray-400" onclick="app.addModalAmt('la-amount', -10000)">-10000</button>
+                    <button class="btn-retro py-1 text-xs text-gray-400" onclick="app.addModalAmt('la-amount', -1000)">-1000</button>
+                    <button class="btn-retro py-1 text-xs text-gray-400" onclick="app.addModalAmt('la-amount', -100)">-100</button>
+                    <button class="btn-retro py-1 text-xs text-cyan border-cyan-800" onclick="document.getElementById('la-amount').value=''; app.updateLoanApplyUI();">重置</button>
+                </div>
+                <div class="text-[10px] text-red-500 mt-1 hidden" id="la-warn">金額超出上限或未選擇擔保品</div>
+            </div>
+            <div class="flex gap-3">
+                <button id="btn-loan-confirm" class="btn-retro flex-1 py-2 font-bold border-red-500 text-red-400 hover:bg-red-900 hover:text-white disabled:border-gray-700 disabled:text-gray-700" onclick="app.executeLoanApply()">簽署合約</button>
+                <button class="btn-retro flex-1 py-2" onclick="app.closeModal('loan-apply')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-fixed-dep" class="fixed inset-0 bg-black bg-opacity-95 hidden flex items-center justify-center z-50 p-4">
+        <div class="panel p-6 w-full max-w-sm">
+            <h3 class="text-xl mb-4 border-b border-green-700 pb-2">申辦定期存款</h3>
+            <p class="text-sm text-gray-300 mb-2">銀行: <span id="fd-bank-name" class="text-yellow"></span></p>
+            <p class="text-sm text-gray-300 mb-4">年利率: <span id="fd-rate" class="text-cyan"></span> | 期限: <span id="fd-days" class="text-cyan"></span> 天</p>
+            <input type="number" id="fd-amount" class="bg-black border border-green-500 w-full p-2 text-white outline-none mb-1 font-bold text-lg" placeholder="輸入存入金額">
+            <div class="grid grid-cols-4 gap-1 mt-2 mb-4">
+                <button class="btn-retro py-1 text-xs" onclick="app.addModalAmt('fd-amount', 10000)">+10000</button>
+                <button class="btn-retro py-1 text-xs" onclick="app.addModalAmt('fd-amount', 1000)">+1000</button>
+                <button class="btn-retro py-1 text-xs" onclick="app.addModalAmt('fd-amount', 100)">+100</button>
+                <button class="btn-retro py-1 text-xs text-yellow border-yellow-800" onclick="app.setModalMaxAmt('fd')">最大</button>
+                <button class="btn-retro py-1 text-xs text-gray-400" onclick="app.addModalAmt('fd-amount', -10000)">-10000</button>
+                <button class="btn-retro py-1 text-xs text-gray-400" onclick="app.addModalAmt('fd-amount', -1000)">-1000</button>
+                <button class="btn-retro py-1 text-xs text-gray-400" onclick="app.addModalAmt('fd-amount', -100)">-100</button>
+                <button class="btn-retro py-1 text-xs text-cyan border-cyan-800" onclick="document.getElementById('fd-amount').value='';">重置</button>
+            </div>
+            <div class="flex gap-3">
+                <button class="btn-retro flex-1 py-2" onclick="app.confirmFixedDeposit()">確認定存</button>
+                <button class="btn-retro flex-1 py-2 border-red-500 text-red-500" onclick="app.closeModal('fixed-dep')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-found-company" class="fixed inset-0 bg-black bg-opacity-95 hidden flex items-center justify-center z-50 p-4">
+        <div class="panel p-6 w-full max-w-sm border-red-500 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
+            <h3 class="text-xl mb-4 border-b border-red-800 pb-2 text-red-400 font-bold">🚀 創立企業總部</h3>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">企業名稱:</label>
+                    <input type="text" id="found-name" class="bg-black border border-green-500 w-full p-2 text-white outline-none font-bold" placeholder="輸入企業名稱 (如：神盾科技)">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">掛牌市場:</label>
+                    <select id="found-market" class="bg-black border border-green-500 text-green-500 p-2 w-full outline-none cursor-pointer">
+                        <option value="tw">🇹🇼 國內台股 (受 10% 漲跌幅限制)</option>
+                        <option value="global">🌎 海外美股 (無漲跌幅限制)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">所屬產業板塊:</label>
+                    <select id="found-sector" class="bg-black border border-green-500 text-green-500 p-2 w-full outline-none cursor-pointer" onchange="CEO_MODULE.onFoundSectorChange(this.value)"></select>
+                </div>
+                <div id="found-bizmodel-container" class="hidden">
+                    <label class="text-xs text-gray-400 block mb-1">企業營運模式:</label>
+                    <select id="found-bizmodel" class="bg-black border border-green-500 text-green-500 p-2 w-full outline-none cursor-pointer">
+                        <option value="marine">🚢 海運貨櫃 (標案合約制)</option>
+                        <option value="airline">✈️ 航空客運 (階梯式解鎖)</option>
+                        <option value="transit">🚆 大眾運輸 (需求曲線模型)</option>
+                        <option value="logistics">🚛 物流承攬 (零售指數連動)</option>
+                    </select>
+                </div>
+                <div class="mt-3">
+                    <label class="text-xs text-gray-400 block mb-1">投入實收資本額 (最低 $5,000,000):</label>
+                    <input type="number" id="found-capital" class="bg-black border border-green-500 w-full p-2 text-white outline-none font-bold text-lg" value="100000000" min="5000000" step="1000000">
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button class="btn-retro flex-1 py-2 font-bold border-red-500 text-red-400 hover:bg-red-900 hover:text-white" onclick="CEO_MODULE.executeFoundCompany()">投入資金創立</button>
+                <button class="btn-retro flex-1 py-2 border-gray-500 text-gray-500 hover:text-white" onclick="app.closeModal('found-company')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-rnd-review" class="fixed inset-0 bg-black bg-opacity-80 hidden items-center justify-center z-50 p-4">
+        <div class="panel p-6 w-full max-w-md border-yellow relative crt-flicker shadow-[0_0_20px_rgba(255,255,0,0.2)]">
+            <h2 class="text-xl text-yellow border-b border-yellow-800 pb-2 mb-4 font-bold flex items-center gap-2">⚠️ CEO 決策審批：新產品結算</h2>
+            <div id="review-content" class="space-y-4 mb-6 text-sm"></div>
+            <div class="flex gap-3">
+                <button id="btn-review-launch" class="btn-retro flex-1 py-3 font-bold border-green-500 text-green-400 hover:bg-green-900 hover:text-white transition">🚀 正式發布上市</button>
+                <button id="btn-review-scrap" class="btn-retro flex-1 py-3 border-red-500 text-red-500 hover:bg-red-900 hover:text-white transition">🗑️ 終止並報廢專案</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-rd-event" class="fixed inset-0 bg-black bg-opacity-80 hidden justify-center items-center z-50 p-4">
+        <div class="bg-black border-2 border-yellow-500 w-full max-w-md p-6 shadow-[0_0_20px_rgba(255,255,0,0.2)]">
+            <div class="flex justify-between items-center border-b border-yellow-800 pb-2 mb-4">
+                <h2 class="text-yellow font-bold text-base flex items-center gap-2"><span>⚠️ 研發中心緊急呈報</span></h2>
+                <button class="text-gray-500 hover:text-white font-bold" onclick="app.closeModal('rd-event')">✕</button>
+            </div>
+            <div id="rd-event-content"></div>
+            <div class="mt-4 pt-3 border-t border-gray-800 text-right">
+                <span class="text-[10px] text-gray-500">請謹慎衡量帳上現金流與潛在公關風險</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-trade" class="fixed inset-0 bg-black bg-opacity-95 hidden flex items-center justify-center z-50 p-4">
+        <div class="panel p-6 w-full max-w-sm border-cyan" id="modal-trade-panel">
+            <h3 id="trade-title" class="text-xl mb-4 border-b border-cyan-800 pb-2">交易委託單</h3>
+            <div class="text-sm space-y-1 mb-4 text-gray-300">
+                <p>標的: <span id="trade-name" class="text-yellow font-bold"></span></p>
+                <p>市價: <span id="trade-price" class="text-white"></span></p>
+                <p>持有數: <span id="trade-owned" class="text-white"></span></p>
+            </div>
+            <div class="mb-4">
+                <label class="text-xs text-gray-400">委託數量 (股):</label>
+                <input type="number" id="trade-qty" class="bg-black border border-green-500 w-full p-2 text-white outline-none mt-1 font-bold text-lg" min="1" step="1" value="100" oninput="app.updateTradeUI()">
+                <div class="grid grid-cols-4 gap-1 mt-2">
+                    <button class="btn-retro py-1 text-xs" onclick="app.addTradeQty(10)">+10</button>
+                    <button class="btn-retro py-1 text-xs" onclick="app.addTradeQty(100)">+100</button>
+                    <button class="btn-retro py-1 text-xs" onclick="app.addTradeQty(1000)">+1000</button>
+                    <button class="btn-retro py-1 text-xs text-yellow border-yellow-800" onclick="app.setTradeMax()">最大</button>
+                    <button class="btn-retro py-1 text-xs text-gray-400" onclick="app.addTradeQty(-10)">-10</button>
+                    <button class="btn-retro py-1 text-xs text-gray-400" onclick="app.addTradeQty(-100)">-100</button>
+                    <button class="btn-retro py-1 text-xs text-gray-400" onclick="app.addTradeQty(-1000)">-1000</button>
+                    <button class="btn-retro py-1 text-xs text-cyan border-cyan-800" onclick="document.getElementById('trade-qty').value=100; app.updateTradeUI();">重置</button>
+                </div>
+            </div>
+            <div class="mb-6 bg-green-900 bg-opacity-20 p-2 text-center border border-green-800 flex flex-col">
+                <div class="text-sm text-gray-400" id="trade-total-label">交割金額:</div>
+                <div id="trade-total" class="font-bold text-xl text-cyan">$ 0</div>
+                <div class="text-[10px] text-yellow mt-1" id="trade-slippage-warn"></div>
+                <div class="text-[10px] text-gray-500 mt-1" id="trade-margin-warn">含券商手續費</div>
+            </div>
+            <div class="flex gap-3">
+                <button id="btn-trade-confirm" class="btn-retro flex-1 py-2 font-bold bg-green-900 bg-opacity-30" onclick="app.executeTrade()">確認下單</button>
+                <button class="btn-retro flex-1 py-2 border-red-500 text-red-500" onclick="app.closeModal('trade')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-liquidate" class="fixed inset-0 bg-black bg-opacity-95 hidden flex flex-col items-center justify-center z-50 p-4">
+        <div class="panel p-6 w-full max-w-md border-yellow-500 shadow-[0_0_20px_rgba(255,255,0,0.3)]">
+            <h3 class="text-xl mb-2 border-b border-yellow-700 pb-2 text-yellow font-bold">⚠️ 資金追繳通知 (Margin Call / Loan Due)</h3>
+            <p class="text-sm text-gray-300 mb-4" id="liq-reason"></p>
+            <div class="flex justify-between items-center mb-4 p-3 bg-red-900 bg-opacity-20 border border-red-800">
+                <span class="text-sm text-gray-400">當前資金缺口:</span>
+                <span class="text-2xl text-red-500 font-bold" id="liq-deficit">$ 0</span>
+            </div>
+            <div class="text-xs text-gray-400 mb-2">請選擇要變現的現股資產以補足缺口：</div>
+            <div class="max-h-[250px] overflow-y-auto mb-4 pr-1 space-y-2" id="liq-stock-list"></div>
+            <div class="flex gap-3 mt-4 pt-4 border-t border-gray-800">
+                <button id="btn-liq-confirm" class="btn-retro flex-1 py-3 font-bold bg-green-900 bg-opacity-30 disabled:border-gray-800 disabled:text-gray-700 transition" disabled>缺口已補足 (確認)</button>
+                <button id="btn-liq-fail" class="btn-retro py-3 px-4 border-red-500 text-red-500 text-xs hover:bg-red-900 hover:text-white transition">放棄掙扎 (違約)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-tax" class="fixed inset-0 bg-black bg-opacity-95 hidden flex flex-col items-center justify-center z-50 p-4">
+        <div class="panel p-6 w-full max-w-md border-yellow-500">
+            <h3 class="text-2xl mb-4 border-b border-yellow-700 pb-2 text-yellow font-bold">年度稅務申報 (國稅局)</h3>
+            <div class="space-y-2 text-sm text-gray-300 mb-6">
+                <div class="flex justify-between"><span>年度總收益 (Revenue):</span> <span class="text-green-400" id="tax-rev">$0</span></div>
+                <div class="flex justify-between"><span>年度可扣除額 (Deductions):</span> <span class="text-red-400" id="tax-ded">$0</span></div>
+                <div class="flex justify-between border-t border-gray-700 pt-2 font-bold text-base"><span>淨應稅所得 (Taxable):</span> <span class="text-cyan" id="tax-net">$0</span></div>
+                <div class="mt-4 p-3 bg-red-900 bg-opacity-30 border border-red-800">
+                    <div class="flex justify-between text-lg font-bold">
+                        <span>應繳稅金:</span> <span class="text-red-500" id="tax-amount">$0</span>
+                    </div>
+                    <div class="text-[12px] text-cyan text-right mt-1" id="tax-discount-label"></div>
+                </div>
+                <div class="text-[10px] text-gray-500 text-right mt-1">依據五段累進級距計算 (0%~50%)</div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <button class="btn-retro py-3 font-bold bg-green-900 bg-opacity-30" onclick="app.payTax('honest')">誠實申報並繳納</button>
+                <button class="btn-retro py-2 border-magenta text-magenta text-xs" onclick="app.payTax('evade')">找黑心會計師作帳 (支付10%逃稅，大幅增加查稅風險)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-gameover" class="fixed inset-0 bg-black bg-opacity-95 hidden flex flex-col items-center justify-center z-50 p-4 text-center">
+        <h1 class="text-6xl font-bold text-red-600 mb-6 tracking-widest animate-pulse">GAME OVER</h1>
+        <div class="panel p-6 max-w-md bg-black mx-auto">
+            <p id="gameover-reason" class="text-xl text-yellow mb-6"></p>
+            <button class="btn-retro w-full py-3 text-lg font-bold border-red-500 text-red-500 hover:bg-red-900 hover:text-white" onclick="app.restartGame()">重新開始 (REBOOT)</button>
+        </div>
+    </div>
+    
+    <div id="modal-company" class="fixed inset-0 bg-black bg-opacity-95 hidden flex flex-col items-center justify-center z-50 p-4">
+        <div class="panel p-6 w-full max-w-md border-cyan">
+            <div class="flex justify-between items-start border-b border-cyan-800 pb-2 mb-4">
+                <div>
+                    <h3 id="ci-name" class="text-2xl text-cyan font-bold">公司名稱</h3>
+                    <div id="ci-id" class="text-xs text-gray-400 mt-1">代號</div>
+                </div>
+                <span id="ci-sector" class="text-xs text-gray-300 bg-cyan-900 bg-opacity-40 border border-cyan-800 px-2 py-1 rounded">板塊</span>
+            </div>
+            
+            <div class="flex space-x-2 border-b border-green-700 pb-2 mb-4">
+                <button id="btn-ci-tab-info" class="btn-retro px-3 py-1 text-xs active bg-green-900 bg-opacity-50" onclick="app.switchCompanyTab('info')">基本資訊</button>
+                <button id="btn-ci-tab-chart" class="btn-retro px-3 py-1 text-xs" onclick="app.switchCompanyTab('chart')">歷史走勢</button>
+                <button id="btn-ci-tab-ceo" class="btn-retro px-3 py-1 text-xs text-yellow border-yellow-600 hover:bg-yellow-900 transition" onclick="app.switchCompanyTab('ceo')">現任 CEO</button>
+                <button id="btn-ci-tab-board" class="btn-retro px-3 py-1 text-xs text-magenta border-magenta hover:bg-magenta hover:text-white transition" onclick="app.switchCompanyTab('board')">董事會</button>
+            </div>
+            
+            <div id="ci-tab-info" class="space-y-4 text-sm text-gray-300 mb-6 max-h-[50vh] overflow-y-auto pr-2">
+                <div>
+                    <h4 class="text-yellow mb-1 font-bold">🏢 企業概況</h4>
+                    <p id="ci-desc" class="text-xs text-gray-400 leading-relaxed bg-black border border-gray-800 p-2"></p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2 bg-green-900 bg-opacity-20 p-3 border border-green-800">
+                    <div>
+                        <div class="text-[10px] text-gray-500">發行總股數</div>
+                        <div id="ci-total-shares" class="text-white font-bold">0</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-gray-500">最新收盤價</div>
+                        <div id="ci-price" class="text-white font-bold text-lg">0</div>
+                    </div>
+                </div>
+
+                <div class="mt-2 mb-3">
+                    <h4 class="text-cyan mb-1 text-[11px] font-bold border-b border-cyan-900 pb-1">📊 財報基本面與籌碼估值</h4>
+                    <div class="grid grid-cols-2 gap-2 text-[11px] bg-black p-2 border border-green-900">
+                        <div><span class="text-gray-500">本益比 (P/E):</span> <span id="ci-pe" class="text-white"></span></div>
+                        <div><span class="text-gray-500">淨值比 (P/B):</span> <span id="ci-pb" class="text-white"></span></div>
+                        <div><span class="text-gray-500">近四季 EPS:</span> <span id="ci-eps" class="text-yellow"></span></div>
+                        <div><span class="text-gray-500">預估成交量:</span> <span id="ci-vol" class="text-white"></span></div>
+                        <div><span class="text-gray-500">月營收 (MoM):</span> <span id="ci-mom" class="text-white"></span></div>
+                        <div><span class="text-gray-500">年營收 (YoY):</span> <span id="ci-yoy" class="text-white"></span></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1 text-[10px] bg-cyan-900 bg-opacity-20 p-2 border-l border-r border-b border-green-900 text-center">
+                        <div><div class="text-gray-400">毛利率</div><div id="ci-gm" class="text-white font-bold mt-0.5"></div></div>
+                        <div><div class="text-gray-400">營業利益率</div><div id="ci-om" class="text-white font-bold mt-0.5"></div></div>
+                        <div><div class="text-gray-400">稅後淨利率</div><div id="ci-nm" class="text-white font-bold mt-0.5"></div></div>
+                    </div>
+                </div>
+                
+                <div id="ci-ownership-section" class="bg-blue-900 bg-opacity-20 p-3 border border-blue-800 hidden">
+                    <div class="text-[10px] text-cyan mb-2 font-bold border-b border-blue-800 pb-1">💼 你的持股狀態</div>
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs text-gray-300">現股持有: <span id="ci-owned" class="text-white font-bold">0</span> 股</span>
+                        <span id="ci-owned-pct" class="text-yellow text-xs font-bold">占 0%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-300">信用空單: <span id="ci-short" class="text-magenta font-bold">0</span> 股</span>
+                        <span id="ci-short-pct" class="text-magenta text-xs font-bold">占 0%</span>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h4 class="text-yellow mb-1 text-[11px] font-bold border-b border-yellow-900 pb-1">📢 企業最新公告 & 產品動態</h4>
+                    <div id="ci-bulletin-board" class="bg-black border border-yellow-800 h-32 overflow-y-auto p-2 space-y-2 text-[10px]"></div>
+                </div>
+            </div>
+
+            <div id="ci-tab-chart" class="hidden text-sm text-gray-300 mb-6">
+                <div class="bg-black border border-green-800 p-2 relative">
+                    <div class="flex justify-between text-[10px] text-gray-400 mb-2">
+                        <span>📉 近 30 日走勢</span>
+                        <span>最高: <span id="ci-high" class="text-yellow font-bold">0</span> | 最低: <span id="ci-low" class="text-cyan font-bold">0</span></span>
+                    </div>
+                    <canvas id="modal-price-chart" width="400" height="200" class="w-full h-auto border-b border-l border-green-900"></canvas>
+                </div>
+            </div>
+
+            <div id="ci-tab-ceo" class="hidden text-sm text-gray-300 mb-6 max-h-[50vh] overflow-y-auto pr-2">
+                <div id="ceo-detail-display"></div>
+            </div>
+
+            <div id="ci-tab-board" class="hidden text-sm text-gray-300 mb-6">
+                <div class="bg-black border border-magenta p-4 shadow-[0_0_10px_rgba(255,0,255,0.2)]">
+                    <h4 class="text-magenta font-bold text-lg mb-2">🏛️ 董事會與經營權 (Boardroom)</h4>
+                    <div class="mb-4 text-xs text-gray-400">
+                        目前持股比例：<span id="ci-board-pct" class="text-yellow font-bold text-lg">0%</span>
+                        <br>當前身分：<span id="ci-board-role" class="text-white font-bold">散戶</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="border border-green-800 p-2 bg-green-900 bg-opacity-20">
+                            <div class="flex justify-between items-center mb-1"><span class="text-cyan font-bold">1. 公開收購 (Tender Offer)</span></div>
+                            <div class="text-[10px] text-gray-400 mb-2">以高於市價 20% 的溢價，一次性向大眾收購大量籌碼，避免慢慢買造成的鉅額滑價。</div>
+                            <div class="flex gap-2">
+                                <button class="btn-retro text-xs px-2 py-1 flex-1 border-cyan text-cyan" onclick="app.tenderOffer(0.05)">收購 5% 股權</button>
+                                <button class="btn-retro text-xs px-2 py-1 flex-1 border-cyan text-cyan" onclick="app.tenderOffer(0.10)">收購 10% 股權</button>
+                            </div>
+                        </div>
+                        <div class="border border-yellow-800 p-2 bg-yellow-900 bg-opacity-20">
+                            <div class="flex justify-between items-center mb-1"><span class="text-yellow font-bold">2. 委託書大戰 (Proxy Fight)</span></div>
+                            <div class="text-[10px] text-gray-400 mb-2">當持股達 30% 以上，可耗資大量現金收購散戶委託書發動政變。成功機率取決於資金與你的社會聲望。</div>
+                            <button class="btn-retro text-xs px-2 py-1 w-full border-yellow text-yellow" id="btn-proxy-fight" onclick="app.proxyFight()">發動委託書大戰 (奪取經營權)</button>
+                        </div>
+                        <div class="border border-red-800 p-2 bg-red-900 bg-opacity-20">
+                            <div class="flex justify-between items-center mb-1"><span class="text-red-400 font-bold">3. 經營決策 (CEO 專屬)</span></div>
+                            <div class="text-[10px] text-gray-400 mb-2">取得 50% 股權或政變成功後解鎖。可操縱財報分配、實施庫藏股或人為釋放利多利空新聞。</div>
+                            <button class="btn-retro text-xs px-2 py-1 w-full border-gray-600 text-gray-600 cursor-not-allowed" id="btn-ceo-ops" disabled>進入公司營運面板 (尚未解鎖)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-retro w-full py-2 border-cyan text-cyan hover:bg-cyan-900" onclick="app.closeModal('company')">關閉資訊</button>
+        </div>
+    </div>
+
+    <script src="desc.js"></script>
+    <script src="data.js"></script>
+    <script src="research_data.js"></script>
+    <script src="engine.js"></script>
+    <script src="ceo.js"></script>
+    <script src="ceo_semi.js"></script>
+    <script src="ceo_pharma.js"></script>
+    <script src="ceo_finance.js"></script>
+    <script src="ceo_software.js"></script>
+    <script src="ceo_market.js"></script>
+    <script src="ceo_telecom.js"></script>
+    <script src="ceo_electronics.js"></script>
+    <script src="ceo_game.js"></script>
+    <script src="ceo_auto.js"></script>
+    <script src="ceo_realestate.js"></script>
+    <script src="ceo_retail.js"></script>
+    <script src="ceo_food.js"></script>
+    <script src="ceo_energy.js"></script>
+    <script src="ceo_transport.js"></script>
+</body>
+</html>
